@@ -14,7 +14,6 @@ router.post('/', async (req, res) => {
     }
 
     // Require user id OR guest info
-    // Prevent empty string submissions for name/email
     const guestName = typeof name === 'string' ? name.trim() : '';
     const guestEmail = typeof email === 'string' ? email.trim() : '';
     if (!user && (!guestName || !guestEmail)) {
@@ -72,6 +71,19 @@ router.get('/', async (req, res) => {
       .populate({ path: 'car' })
       .populate({ path: 'user', select: '-password' });
     res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get a specific booking by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate({ path: 'car' })
+      .populate({ path: 'user', select: '-password' });
+    if (!booking) return res.status(404).json({ error: 'Booking not found.' });
+    res.json(booking);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
