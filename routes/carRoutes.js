@@ -6,11 +6,24 @@ const Car = require('../models/Car');
 router.post('/', async (req, res) => {
   try {
     const {
-      brand, model, year, pricePerDay, fuelType,
+      brand, model, year, type, pricePerDay, fuelType,
       mileage, transmission, features, color, imageUrl, seatCount
     } = req.body;
 
-    if (!brand || !model || !year || !pricePerDay || !fuelType || !mileage || !transmission || !color || !seatCount) {
+    // LOG THE BODY FOR DEBUGGING
+    console.log('Request body:', req.body);
+
+    // Validate required fields (type included!)
+    if (
+      !brand ||
+      !model ||
+      !year ||
+      !type ||
+      !pricePerDay ||
+      !fuelType ||
+      !mileage ||
+      !transmission
+    ) {
       return res.status(400).json({ error: "All required fields must be provided." });
     }
     if (typeof year !== 'number' || year < 1980 || year > new Date().getFullYear() + 2) {
@@ -22,14 +35,22 @@ router.post('/', async (req, res) => {
     if (typeof mileage !== 'number' || mileage < 0) {
       return res.status(400).json({ error: "Mileage must be a non-negative number." });
     }
-    if (typeof seatCount !== 'number' || seatCount < 1 || seatCount > 20) {
+    if (seatCount !== undefined && (typeof seatCount !== 'number' || seatCount < 1 || seatCount > 20)) {
       return res.status(400).json({ error: "Seat count must be between 1 and 20." });
     }
 
     const car = new Car({
-      brand, model, year, pricePerDay, fuelType,
-      mileage, transmission, features: features || [],
-      color, imageUrl: imageUrl || "",
+      brand,
+      model,
+      year,
+      type,
+      pricePerDay,
+      fuelType,
+      mileage,
+      transmission,
+      features: features || [],
+      color,
+      imageUrl: imageUrl || "",
       seatCount,
       isAvailable: true
     });

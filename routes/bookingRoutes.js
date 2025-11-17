@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const Car = require('../models/Car');
+const Notification = require('../models/Notification');
+const { auth } = require('../middleware/auth');
 
-// Create a new booking: supports guest (name/email) OR logged-in user (user)
+// Create a new booking: supports guest (name/email) OR logged-in user
 router.post('/', async (req, res) => {
   try {
     const { car, user, name, email, phone, startDate, endDate, totalPrice } = req.body;
@@ -54,13 +56,20 @@ router.post('/', async (req, res) => {
     });
     await booking.save();
 
+    // === Notification: Booking created ===
+    await Notification.create({
+      user: user || undefined,
+      type: 'booking',
+      message: `Booking #${booking._id} created for car ${theCar.brand} ${theCar.model} (${startDate} to ${endDate}).`
+    });
+
     res.status(201).json(booking);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// List all bookings (with optional filter by car, user, or guest email)
+// List all bookings (optional filter by car, user, or guest email)
 router.get('/', async (req, res) => {
   try {
     let filter = {};
@@ -89,11 +98,19 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Cancel a booking
+// Cancel a booking (with notification)
 router.delete('/:id', async (req, res) => {
   try {
     const booking = await Booking.findByIdAndDelete(req.params.id);
     if (!booking) return res.status(404).json({ error: 'Booking not found.' });
+
+    // === Notification: Booking canceled ===
+    await Notification.create({
+      user: booking.user || undefined,
+      type: 'cancel',
+      message: `Booking #${booking._id} for car ${booking.car} was canceled.`
+    });
+
     res.json({ message: 'Booking cancelled.' });
   } catch (error) {
     res.status(500).json({ error: error.message });

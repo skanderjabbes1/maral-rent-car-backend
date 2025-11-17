@@ -28,6 +28,10 @@ app.use('/api/bookings', bookingRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admins', adminRoutes);
 
+// NEW: notifications API route
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/api/notifications', notificationRoutes);
+
 // --- Optional: base route for quick API test ---
 app.get('/', (req, res) => {
   res.send('Maral Rent Car API is running!');
