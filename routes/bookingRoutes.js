@@ -47,6 +47,7 @@ router.post('/', async (req, res) => {
     const booking = new Booking({
       car,
       user: user || undefined,
+      id: user || undefined,        // Always save user id at top-level for filtering!
       name: guestName || undefined,
       email: guestEmail || undefined,
       phone: phone || undefined,
@@ -74,11 +75,20 @@ router.get('/', async (req, res) => {
   try {
     let filter = {};
     if (req.query.car) filter.car = req.query.car;
-    if (req.query.user) filter.user = req.query.user;
     if (req.query.email) filter.email = req.query.email;
+
+    if (req.query.user) {
+      // Filter by BOTH possible cases: user field or top-level id field
+      filter.$or = [
+        { user: req.query.user }, // for Mongoose ref
+        { id: req.query.user }    // for top-level id
+      ];
+    }
+
     const bookings = await Booking.find(filter)
       .populate({ path: 'car' })
       .populate({ path: 'user', select: '-password' });
+
     res.json(bookings);
   } catch (error) {
     res.status(500).json({ error: error.message });
