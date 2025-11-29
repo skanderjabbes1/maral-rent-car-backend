@@ -6,12 +6,15 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' }, // For admin access
-  createdAt: { type: Date, default: Date.now }
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  createdAt: { type: Date, default: Date.now },
+  // For "forgot password" flow
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
 });
 
-// Password hash middleware (optional, recommended)
-userSchema.pre('save', async function(next) {
+// Hash password before save if modified
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
     const salt = await bcrypt.genSalt(10);

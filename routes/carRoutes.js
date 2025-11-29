@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Car = require('../models/Car');
+const { auth, admin } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // Create a new car (with validation)
 router.post('/', async (req, res) => {
@@ -122,6 +124,16 @@ router.get('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Upload car image (admin only)
+router.post('/upload-image', auth, admin, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file uploaded.' });
+  }
+
+  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/cars/${req.file.filename}`;
+  return res.json({ imageUrl });
 });
 
 // Get single car by ID
